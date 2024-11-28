@@ -1,0 +1,224 @@
+---
+title: "Manual DUOpop: A Comprehensive Guide to Usage"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{manual_DUOpop}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette explains how to run a synthesis within DUO step by step. A package called DUOpop was created for this matter. So the start of the process is to load the package DUOpop.
+
+```{r setup}
+# Load the DUOpop package 
+library(DUOpop)
+
+```
+
+The DUOpop package was built on top of the well known synthpop package. We need to install this package and several other packages. It's up to you which packages you need. To load the packages we use the built in function load_packages() from the DUOpop package.
+
+```{r, message = FALSE, warning = FALSE, results = 'hide'}
+# Load other packages 
+load_packages("tidyverse", "odbc", "readr", "glue", "writexl", "synthpop", "flextable")
+
+```
+
+The next step is to load data. For this vignette we used a built in dataset from the synthpop package. When using data from an in-house database, it might be useful to create a module for loading your data.
+
+```{r,message = FALSE, warning = FALSE,results = 'hide'}
+
+# Load data to synthesize 
+data_observed <- SD2011 %>%
+  select(sex, age, marital, depress, smoke, income, ymarr)
+
+head(data_observed)
+
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+
+
+library(flextable)
+
+# Eerste rijen van de data bekijken
+ft <- head(data_observed)
+
+# Mooie tabel maken met flextable
+flextable(ft) %>%
+  autofit() %>%
+  theme_zebra() %>%
+  font(fontname = "Arial", part = "all") %>%
+  set_header_labels(
+    sex = "Gender",
+    age = "Age",
+    marital = "Marital Status",
+    depress = "Depression Score",
+    smoke = "Smoker?",
+    income = "Income",
+    ymarr = "Year Married"
+  )
+
+
+```
+
+After loading the data, it's useful to gain some insight in your dataframe. The built in function dataframe_comparer() from the DUOpop package can be used for doing this. The function tells you the data type of the variable, the minimum and the maximum value and much more. If data preparation is needed, it is recommended to create a seperate module for doing so.
+
+```{r, message = FALSE, warning = FALSE, results = 'hide'}
+# Analyze observed data   
+observed_data_check <- dataframe_comparer(data_observed)
+
+print(observed_data_check)
+
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Vereiste libraries
+library(flextable)
+
+# Data voorbereiden (observed_data_check verondersteld als gegeven)
+# observed_data_check bevat de volgende kolommen:
+# "variable_names", "type", "count_unique_values", "unique_values", 
+# "min_median_mean_max", "count_NA", "count_filled_values", 
+# "count_empty_values", "percentage_NA"
+
+# Tabel opmaken met flextable
+flextable(observed_data_check) %>%
+  autofit() %>%
+  theme_zebra() %>%
+  set_header_labels(
+    variable_names = "Variable Names",
+    type = "Type",
+    count_unique_values = "Unique Values (Count)",
+    unique_values = "Unique Values",
+    min_median_mean_max = "Min/Median/Mean/Max",
+    count_NA = "Count (NA)",
+    count_filled_values = "Count (Filled)",
+    count_empty_values = "Count (Empty)",
+    percentage_NA = "Percentage (NA)"
+  ) %>%
+  align(j = c("count_unique_values", "count_NA", "count_filled_values", "count_empty_values", "percentage_NA"), align = "center") %>%
+  bold(part = "header") %>%
+  fontsize(size = 8, part = "all") %>%
+  font(fontname = "Arial", part = "all") %>%
+  add_footer_lines("Summary of observed data with variable insights.")
+
+```
+
+
+After inspecting and preparing the observed data, the data can be synthesized. The built in function syn() from the synthpop package is used for synthesizing. Several parameters can be given to the function. Type ?syn in your console to see which parameters are accepted.
+
+```{r, message = FALSE, warning = FALSE, results = 'hide'}
+# Synthesize data 
+sds <- syn(data_observed)
+
+```
+
+```{r, message = FALSE, warning = FALSE, results = 'hide'}
+head(sds$syn)
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Stap 1: Data selecteren
+ft <- head(sds$syn)
+
+# Stap 2: Laad flextable
+library(flextable)
+
+# Stap 3: Maak de flextable met opmaak
+flextable(ft) %>%
+  autofit() %>%
+  theme_zebra() %>%
+  font(fontname = "Arial", part = "all") %>%
+  set_header_labels(
+    sex = "Gender",
+    age = "Age",
+    marital = "Marital Status",
+    depress = "Depression Score",
+    smoke = "Smoker?",
+    income = "Income",
+    ymarr = "Year Married"
+  )
+
+```
+
+Now the synthetic data can be compared to the observed data. The dataframe_comparer() function can be used again for doing so. Now it takes two parameters: the observed data and the synthetic data.
+
+```{r, message = FALSE, warning = FALSE, results='hide'}
+# Compare the synthetic data to the observed data 
+comparison_observed_syn <- dataframe_comparer(data_observed, sds$syn)
+
+comparison_observed_syn
+
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+
+# Maak de flextable met aangepaste kolomnamen en opmaak
+flextable(comparison_observed_syn) %>%
+  autofit() %>%
+   width(width = 1) %>%
+  theme_zebra() %>%
+  set_header_labels(
+    variable_name = "Variable Name",
+    real_data_type = "Observed Data Type",
+    syn_data_type = "Synthetic Data Type",
+    level_agreement = "Level of Agreement",
+    real_data_count_unique_values = "Observed Unique Values (Count)",
+    syn_data_count_unique_values = "Synthetic Unique Values (Count)",
+    real_data_unique_values = "Observed Unique Values",
+    syn_data_unique_values = "Synthetic Unique Values",
+    real_data_min_median_mean_max = "Observed Min/Median/Mean/Max",
+    syn_data_min_median_mean_max = "Synthetic Min/Median/Mean/Max",
+    real_data_count_NA = "Observed Count (NA)",
+    syn_data_count_NA = "Synthetic Count (NA)",
+    real_data_count_filled_values = "Observed Count (Filled)",
+    syn_data_count_filled_values = "Synthetic Count (Filled)",
+    real_data_count_empty_values = "Observed Count (Empty)",
+    syn_data_count_empty_values = "Synthetic Count (Empty)",
+    real_data_percentage_NA = "Observed Percentage (NA)",
+    syn_data_percentage_NA = "Synthetic Percentage (NA)"
+  ) %>%
+  bold(part = "header") %>%
+  fontsize(size = 8, part = "all") %>%
+  font(fontname = "Arial", part = "all") %>%
+  add_footer_lines("Comparison between observed and synthetic data variables.")
+
+```
+
+
+Next to comparing the dataframes, it's useful to gain some insight in the utility of the synthetic data. The built in function utility_evaluation() in the DUOpop package can be used for this.
+
+Utility is measured by a metric called Standardized Mean Squared Propensity Error (SpMSE). The SpMSE evaluates how similar a synthetic dataset is to the real dataset by training a classifier to distinguish between them. It computes the mean squared error of the predicted probabilities (propensity scores) against the expected value of 0.5 (random guess). A lower SpMSE indicates the synthetic data is more indistinguishable from the real data, suggesting better utility. In the plot below, a low SpMSE score is indicated by a green color and a high SpMSE score is indicated by red. In between scores are indicated by yellow and orange. Links to websites that explain more about the SpMSE can be found on the website of [Synthpop](https://www.synthpop.org.uk/resources.html).
+
+```{r, message = FALSE, warning = FALSE}
+# # Test the post hoc utility
+utility_result <- utility_evaluation(sds, data_observed)
+
+utility_result$plot
+
+```
+
+
+```{r}
+utility_result$`1-dim`$tab.utility
+
+```
+
+And, the privacy can be measured using the built in privacy_evaluation() function in the DUOpop package. Within this function the Distance to the Closest Record (DCR) is calculated. The DCR metric evaluates the privacy of a synthetic dataset by measuring the similarity between each real record and its closest synthetic record. A high average minimal distance indicates stronger privacy, as it implies synthetic records are not direct copies of real ones. Lower distances may suggest a risk of re-identification. More information can be found on the website of [Frontiers in Big Data](https://www.frontiersin.org/journals/big-data/articles/10.3389/fdata.2021.679939/full). 
+
+```{r, message = FALSE, warning = FALSE}
+# Test the privacy evaluation
+privacy_evaluation <- privacy_evaluation(data_observed)
+
+privacy_evaluation
+
+```
+
+Make sure the synthetic data and the workspact image are saved after running your synthesis. It can save you a lot of time ;). Good luck!

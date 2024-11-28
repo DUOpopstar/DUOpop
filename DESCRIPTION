@@ -1,0 +1,36 @@
+Package: DUOpop
+Title: Simplifies data synthesis
+Version: 0.9.1
+Date: 2024-11-27
+Author: Lotte Pater [aut, cre],
+  Sanne Smid [aut, cre],
+  Azim Eldja [aut],
+  Sophie Vink [aut],
+  Erina Koomen [aut],
+  Romy Schipper [aut]
+Maintainer: Sanne Smid <synthetische.data@duo.nl>
+Description: Streamlines Data Synthesis and Includes Various Metrics to Measure the Utility and Privacy of Synthetic Data.
+License: GPL-2 | GPL-3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports: 
+    dplyr, 
+    purrr,
+    synthpop, 
+    ggplot2, 
+    tibble,
+    readr,
+    utils,
+    writexl
+Depends: 
+    R (>= 2.10)
+LazyData: true
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    withr,
+    flextable
+Config/testthat/edition: 3
+VignetteBuilder: knitr
