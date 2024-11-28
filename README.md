@@ -1,7 +1,9 @@
 <table>
 <tr>
 <td>
+    
 ![DUOpop hexsticker](DUOpop.png)
+    
 </td>
 <td>
 <h1>DUOpop package</h1>
