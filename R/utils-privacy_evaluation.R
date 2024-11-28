@@ -86,6 +86,14 @@ synthesize_data <- function(train_data, strata = NULL, ...) {
 #' @return A dataframe where all NA values have been replaced by \code{na_value}.
 #' @keywords internal
 handle_na <- function(data, na_value) {
+  # Loop door elke kolom in de data
+  for (colname in colnames(data)) {
+    if (is.factor(data[[colname]])) {
+      # Zet factor om naar karakter als de kolom een factor is
+      data[[colname]] <- as.character(data[[colname]])
+    }
+  }
+  # Vervang NA waarden door de opgegeven na_value
   data[is.na(data)] <- na_value
   return(data)
 }
