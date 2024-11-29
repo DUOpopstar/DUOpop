@@ -26,4 +26,4 @@ Or using remotes
 
 ## Documentation
 
-For detailed usage and examples, check out the [vignette](https://github.com/DUOpopstar/DUOpop/tree/main/docs/manual_DUOpop.html).
+For detailed usage and examples, check out the [vignette](https://github.com/DUOpopstar/DUOpop/tree/main/docs/index.html).
