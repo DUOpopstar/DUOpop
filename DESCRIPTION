@@ -6,11 +6,11 @@ Author: Lotte Pater [aut, cre],
   Sanne Smid [aut, cre],
   Azim Eldja [aut],
   Sophie Vink [aut],
-  Erina Koomen [aut],
+  Erine Koomen [aut],
   Romy Schipper [aut]
 Maintainer: Sanne Smid <synthetische.data@duo.nl>
 Description: Streamlines Data Synthesis and Includes Various Metrics to Measure the Utility and Privacy of Synthetic Data.
-License: GPL-2 | GPL-3
+License: EUPL
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
