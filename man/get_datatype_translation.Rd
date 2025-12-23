@@ -2,17 +2,17 @@
 % Please edit documentation in R/utils-create_and_save_metadata.R
 \name{get_datatype_translation}
 \alias{get_datatype_translation}
-\title{datatype translation}
+\title{Data Type Translation}
 \usage{
 get_datatype_translation(lang)
 }
 \arguments{
-\item{lang}{either "en" for english or "nl" for Dutch}
+\item{lang}{Language in which the data types need to be saved. Either "en" for English or "nl" for Dutch.}
 }
 \value{
-vector with translation of datatypes
+Vector with translation of data types.
 }
 \description{
-get a vector of language specific type names
+Creates a vector of language specific data type names.
 }
 \keyword{internal}

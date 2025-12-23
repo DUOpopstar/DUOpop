@@ -4,19 +4,24 @@
 \alias{create_and_save_metadata}
 \title{create and save metadata}
 \usage{
-create_and_save_metadata(file_path, data)
+create_and_save_metadata(file_path, data, lang = "nl")
 }
 \arguments{
-\item{file_path}{the file to save the metadata to.}
+\item{file_path}{The file to save the metadata to.}
 
-\item{data}{the data of which the metadata needs to be saved}
+\item{data}{A data frame of which the metadata needs to be saved.}
+
+\item{lang}{Language in which the data types need to be saved. Either "en" for English or "nl" for Dutch.}
 }
 \value{
-nothing
+No return value, called for side effects.
 }
 \description{
-Creates a tibble for the metadata, based on the datatype of 'data'.
-It also saves it to an excel file.
+Creates a tibble for the metadata, based on the datatype of 'data' and
+saves it to an excel file.
+}
+\details{
+The function writes an .xlsx file with metadata to the location given by \code{file_path}. The operation will overwrite the file if it exists.
 }
 \examples{
 \dontrun{
@@ -25,7 +30,7 @@ full_lower_case=c(1,2,3,2,1)\%>\% as.integer()
 ,ThisIsAFactor=factor(c("A","B","C","B","A"))
 ,numeric_data=c(1.1,2.2,3.3,2.2,1.1)
 )
-create_and_save_metadata("/path/to/file.xlsx",test_data)
+create_and_save_metadata("/path/to/file.xlsx",test_data, lang = "nl")
 }
 
 

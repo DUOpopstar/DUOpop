@@ -9,6 +9,7 @@
 #' @param ngroups Parameter in the function utility.tables {synthpop}
 #' @param utility_stat Parameter in the function compare.synds {synthpop}
 #' @param autofix Logical; if TRUE, automatically aligns and validates the synthetic and observed dataframes.
+#' @param print.flag Parameter in the functions utility.tables and compare.synds {synthpop}
 
 #' @return A list of 1- and 2-dimensional utility visuals
 #' @examples
@@ -46,7 +47,7 @@
 #' @export
 utility_evaluation <- function(syn_object, data_observed,
                                colors = c("darkgreen", "lightgreen", "yellow", "orange", "red"),
-                               ngroups = 25, utility_stat = "S_pMSE", autofix = FALSE){
+                               ngroups = 25, utility_stat = "S_pMSE", autofix = FALSE, print.flag = TRUE){
 
   # validate inputs
   check_df_data_observed(data_observed)
@@ -70,7 +71,7 @@ utility_evaluation <- function(syn_object, data_observed,
   #validate_inputs(syn_object, data_observed)
 
   # Run utility tests
-  utility_data <- run_utility_tests(syn_object, data_observed, utility_stat, ngroups)
+  utility_data <- run_utility_tests(syn_object, data_observed, utility_stat, ngroups, print.flag)
 
   # Create utility plot
   plot <- plot_utility_data(utility_data, colors)

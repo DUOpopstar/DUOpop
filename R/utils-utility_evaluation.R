@@ -212,12 +212,13 @@ synchronize_na_levels <- function(observed_data, synthetic_data) {
 #' @param data_observed The observed data from which the synthesized data was created, with class dataframe
 #' @param utility_stat Parameter in the function compare.synds {synthpop}
 #' @param ngroups Parameter in the function utility.tables {synthpop}
+#' @param print.flag Parameter in the functions utility.tables and compare.synds {synthpop}
 #' @return A list containing 1- and 2-dimensional utility results.
 #' @keywords internal
-run_utility_tests <- function(syn_object, data_observed, utility_stat = "S_pMSE", ngroups = 25) {
+run_utility_tests <- function(syn_object, data_observed, utility_stat = "S_pMSE", ngroups = 25, print.flag = TRUE) {
   utility_data <- list(
-    "1-dim" = compare.synds(syn_object, data_observed, utility.stats = utility_stat),
-    "2-dim" = utility.tables(syn_object, data_observed, ngroups = ngroups)
+    "1-dim" = compare.synds(syn_object, data_observed, utility.stats = utility_stat, print.flag = print.flag),
+    "2-dim" = utility.tables(syn_object, data_observed, ngroups = ngroups, print.flag = print.flag)
   )
   return(utility_data)
 }

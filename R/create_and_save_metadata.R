@@ -1,10 +1,14 @@
 #' @title create and save metadata
-#' @description Creates a tibble for the metadata, based on the datatype of 'data'.
-#'  It also saves it to an excel file.
-#' @param data the data of which the metadata needs to be saved
-#' @param file_path the file to save the metadata to.
+#' @description Creates a tibble for the metadata, based on the datatype of 'data' and
+#'  saves it to an excel file.
+#' @param data A data frame of which the metadata needs to be saved.
+#' @param file_path The file to save the metadata to.
+#' @param lang Language in which the data types need to be saved. Either "en" for English or "nl" for Dutch.
 #'
-#' @return nothing
+#' @return No return value, called for side effects.
+#' @details
+#' The function writes an .xlsx file with metadata to the location given by \code{file_path}. The operation will overwrite the file if it exists.
+#'
 #' @export
 
 #' @examples
@@ -14,7 +18,7 @@
 #' ,ThisIsAFactor=factor(c("A","B","C","B","A"))
 #' ,numeric_data=c(1.1,2.2,3.3,2.2,1.1)
 #' )
-#' create_and_save_metadata("/path/to/file.xlsx",test_data)
+#' create_and_save_metadata("/path/to/file.xlsx",test_data, lang = "nl")
 #' }
 #'
 #'
@@ -22,8 +26,11 @@
 #' @import tibble
 #'
 #'
-create_and_save_metadata <- function(file_path,data) {
+create_and_save_metadata <- function(file_path, data, lang = "nl") {
+  if (!is.data.frame(data)) {
+    stop("Input data must be a data frame.")
+  }
 
-  extract_names_and_types(data,lang="nl")%>%
+  extract_names_and_types(data, lang = lang)%>%
     write_to_excel(file_path)
 }

@@ -1,9 +1,7 @@
 <table>
 <tr>
 <td>
-
 ![DUOpop hexsticker](DUOpop.png)
-
 </td>
 <td>
 <h1>DUOpop package</h1>
@@ -12,20 +10,16 @@ This package includes various metrics to measure the utility and privacy of synt
 </tr>
 </table>
 
-## Package Installation:
+Package Installation:
 
-Install devtools or remotes if not already installed or install.packages("remotes")
+1.  Ensure you are in a 'clean' R environment, with no loaded data objects or packages, to avoid issues with updating existing packages.
 
-`> install.packages("devtools")`
+    -   Close all RStudio windows until only one is open.
 
-Install DUOpop from GitHub
+    -   In RStudio, go to the **Tools** menu \> **Global Options** \> uncheck "**restore .RData into workspace at startup**" \> **OK**.
 
-`> devtools::install_github("DUOpopstar/DUOpop")`
+2.  In RStudio, go to the **Session** menu, select **Terminate R**, and then execute the following commands in the R console:
 
-Or using remotes
+`> install.packages('remotes')`
 
-`> remotes::install_github("DUOpopstar/DUOpop")`
-
-## Documentation
-
-For detailed usage and examples, check out the [vignette](https://duopopstar.github.io/DUOpop/).
+`> remotes::install_local("I:/Team Data-Science/Synthetische Data/R package/DUOpop_1.0.tar.gz", upgrade = F)`

@@ -10,7 +10,8 @@ utility_evaluation(
   colors = c("darkgreen", "lightgreen", "yellow", "orange", "red"),
   ngroups = 25,
   utility_stat = "S_pMSE",
-  autofix = FALSE
+  autofix = FALSE,
+  print.flag = TRUE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ utility_evaluation(
 \item{utility_stat}{Parameter in the function compare.synds {synthpop}}
 
 \item{autofix}{Logical; if TRUE, automatically aligns and validates the synthetic and observed dataframes.}
+
+\item{print.flag}{Parameter in the functions utility.tables and compare.synds {synthpop}}
 }
 \value{
 A list of 1- and 2-dimensional utility visuals

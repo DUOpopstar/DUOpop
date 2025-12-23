@@ -32,6 +32,14 @@ test_that("metadata is written to xlsx file",{
   expect_true(write_is_called)
 })
 
+test_that("error is thrown when input is not a data frame", {
+  expect_error(
+    create_and_save_metadata("/path/to/file.xlsx", list(a = 1:3)),
+    "Input data must be a data frame."
+  )
+})
+
+
 # =====================================================
 # Tests for Helper Functions ----
 # =====================================================
@@ -77,3 +85,5 @@ test_that("datatype and names are extracted from dataframe with dutch data types
   expect_equal(result,expected_result)
 
 })
+
+

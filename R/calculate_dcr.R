@@ -1,0 +1,198 @@
+#' @title Calculate Distance to Closest Record
+#'
+#' @description
+#' This function calculates Distance to Closest Record (DCR) metrics to
+#' evaluate the similarity between an original data set and a synthetic data set.
+#' Factor levels in both data sets are first harmonized using \code{\link{harmonize_factor_levels}}
+#' to ensure comparability.
+#' It then computes the distance measures per record using Gower distance:
+#' \itemize{
+#'    \item \strong{RRD (Real-to-Real Distance):} the minimum distance from each original record to its closest neighbor in the original data set.
+#'    \item \strong{SRD (Synthetic-to-Real Distance):} the minimum distance from each original record to its closest neighbor in the synthetic data set.
+#'    }
+#'
+#' Records flagged as 'copied_outlier' are those with a high RRD
+#' (above a user-defined quantile) and a very low SRD (below a user-defined threshold), indicating they are
+#' exactly or closely copied into the synthetic data set, and may reflect a
+#' privacy risk.
+#'
+#' @param original_df A data frame containing the original data set.
+#' @param synthetic_df A data frame containing the synthetic data set.
+#' @param na.as.distance Logical; passed to \code{\link{custom_gower}} to determine how missing values (\code{NA}) are handled:
+#'      \describe{
+#'        \item{\code{FALSE}}{Standard Gower behavior: distances involving \code{NA} are excluded from averaging, effectively ignoring missing data.}
+#'        \item{\code{TRUE} (default)}{\code{NA} values contribute to the distance computation. Pairs with one missing value are assigned a distance of 1; pairs with both values missing are assigned a distance of 0, and these comparisons count in the average.}
+#'        }
+#' @param KR.corr Logical; passed to \code{\link{custom_gower}} to specify whether
+#'   ordinal variables use Kaufman & Rousseeuw (1990) correction for scaling
+#'   (`TRUE`) or Gower's original method (`FALSE`).
+#' @param rrd_quantile Numeric between 0 and 1; quantile threshold of RRD above which
+#'   records are considered potential outliers (default = 0.95).
+#' @param srd_threshold Numeric; maximum SRD distance below which a record is considered
+#'   too closely copied in the synthetic data (default = 0.005).
+#' @param top_n_copies Integer; number of top copied outliers (ranked by RRD) to display
+#'   in the \code{closest_matches} output (default = 10).
+#' @param interactive_output Logical; if \code{TRUE} (default) results are shown interactively:
+#'   plots are displayed sequentially with pause prompts, and the table of closest matches is opened in a viewer.
+#'
+#' @details
+#' **DCR as a privacy metric:**
+#' Distance to Closest Record (DCR) is often used to quantify disclosure risk in
+#' synthetic data generation. It enables to (1) identify the most-at-risk records
+#' in the original data set, and (2) ensure that those records are not exactly or
+#' closely copied in the synthetic data set.
+#' In particular, a high  RRD (Real-to-Real distance) indicates that a real record
+#' has few similar neighbors in the original data set, meaning that if a close
+#' synthetic match exists, it could reveal sensitive information about a unique
+#' individual or outlier. This increases the risk of identification. To prevent this,
+#' such records should not have a low SRD (Synthetic-to-Real distance), which
+#' indicates that a synthetic record is nearly identical to a real record.
+#'
+#' @return A list with:
+#' \describe{
+#'   \item{histogram}{A ggplot2 histogram of `RRD - SRD`.}
+#'   \item{scatterplot}{A ggplot2 scatter plot of `SRD` vs. `RRD` per observation.}
+#'   \item{closest_matches}{A data frame with the \code{top_n_copies} copied outliers
+#'   and their closest matches.}
+#' }
+#'
+#' @import ggplot2
+#' @import dplyr
+#' @importFrom stats quantile
+#' @importFrom utils View
+#' @importFrom purrr map_dfr
+#'
+#' @seealso [custom_gower()], [harmonize_factor_levels()]
+#'
+#' @examples
+#' # Example data
+#' set.seed(123)
+#' original <- data.frame(
+#'   age = sample(20:70, 50, TRUE),
+#'   gender = factor(sample(c("M", "F"), 50, TRUE))
+#' )
+#' synthetic <- original
+#' synthetic$age <- synthetic$age + rnorm(50, 0, 5)
+#'
+#' # Calculate Distance to Closest Record
+#' res <- calculate_DCR(original, synthetic)
+#' res2 <- calculate_DCR(original, synthetic, na.as.distance = FALSE, KR.corr = FALSE, rrd_quantile =  0.9, srd_threshold = 0.01, top_n_copies = 3, interactive_output = FALSE)
+#'
+#' @export
+#'
+
+calculate_DCR <- function(original_df, synthetic_df, na.as.distance = TRUE, KR.corr = TRUE, rrd_quantile = 0.95, srd_threshold = 0.005, top_n_copies = 10, interactive_output = TRUE) {
+
+  # --- Input validation ---
+  if (inherits(synthetic_df, "synds")) synthetic_df <- synthetic_df$syn
+  if (!is.data.frame(original_df)) stop("Input 'original_df' must be a data frame.")
+  if (!is.data.frame(synthetic_df)) stop("Input 'synthetic_df' must be a data frame.")
+  if (nrow(original_df) == 0 || ncol(original_df) == 0) stop("Input dataset 'original_df' is empty.")
+  if (nrow(synthetic_df) == 0 || ncol(synthetic_df) == 0) stop("Input dataset 'synthetic_df' is empty.")
+
+  ## --- Harmonize factor levels ---
+  harmonized <- harmonize_factor_levels(original_df, synthetic_df)
+  original_df <- harmonized$data.x
+  synthetic_df <- harmonized$data.y
+
+  ## --- Calculate Gower distances --
+
+  count_mat <- matrix((1:nrow(original_df)),ncol=1)
+
+  rrd_result <- apply(count_mat, 1, calc_gow_rrd, x = original_df, KR.corr = KR.corr, na.as.distance = na.as.distance)
+  RRD <- sapply(rrd_result, function(x) x$RRD)
+  closest_index_orig <- sapply(rrd_result, function(x) x$closest_index_orig)
+
+  srd_result <- apply(count_mat, 1, calc_gow_srd, x = original_df, y = synthetic_df, KR.corr = KR.corr, na.as.distance = na.as.distance)
+  SRD <- sapply(srd_result, function(x) x$SRD)
+  closest_index_syn <- sapply(srd_result, function(x) x$closest_index_syn)
+
+  original_df <- original_df %>%
+    mutate(
+      RRD = RRD,
+      SRD = SRD,
+      copied_outlier = (RRD > quantile(RRD, rrd_quantile, na.rm = TRUE)) & SRD < srd_threshold,
+      gap_RRD_SRD = RRD - SRD,
+      orig_closest_row = closest_index_orig,
+      syn_closest_row = closest_index_syn
+    )
+
+  ## --- Plots ---
+  p1 <- ggplot(original_df, aes(x = gap_RRD_SRD)) +
+    geom_histogram(aes(fill = "RRD - SRD"), bins = 80, alpha = 0.7) +
+    labs(
+      title = "Distribution RRD - SRD",
+      subtitle = paste0("Percentage RRD - SRD > 0: ", round(mean(original_df$gap_RRD_SRD > 0, na.rm = TRUE) * 100, 2), "%"),
+      x = "RRD - SRD",
+      y = "Number of observations"
+    ) +
+    scale_fill_manual(values = IP_kleuren_safe) +
+    theme_minimal(base_family = font_vinden_safe(), base_size = 12) +
+    theme(legend.position = "none", plot.subtitle = element_text(size = 9))
+
+  p2 <- ggplot(original_df, aes(x = SRD, y = RRD)) +
+    geom_point(aes(color = copied_outlier, alpha = copied_outlier), size = 2) +
+    geom_hline(yintercept = quantile(original_df$RRD, probs = rrd_quantile),
+               linetype = "dashed", linewidth = 0.5) +
+    annotate("text",
+             x = max(original_df$SRD, na.rm = TRUE),
+             y = quantile(original_df$RRD, probs = rrd_quantile, na.rm = TRUE),
+             label = paste0(round(rrd_quantile*100,2), "% quantile RRD"),
+             vjust = -0.5, hjust = 0.85,
+             size = 3.5) +
+    scale_x_continuous(limits = c(0, max(original_df$SRD))) +
+    scale_y_continuous(limits = c(0, max(original_df$RRD))) +
+    scale_color_manual(values = c("FALSE" = "#007bc7", "TRUE" = "#d52b1e")) +
+    scale_alpha_manual(values = c("FALSE" = 0.3, "TRUE" = 1)) +
+    labs(
+      title = "SRD & RRD per observation",
+      subtitle = paste0("Number of copied outliers (RRD > ", round(rrd_quantile*100,2),
+                        "% & SRD < ", srd_threshold, "): ", sum(original_df$copied_outlier)),
+      x = "Synthetic to real distance",
+      y = "Real to real distance"
+    ) +
+    theme_minimal(base_family = font_vinden_safe(), base_size = 12) +
+    theme(legend.position = "bottom", plot.subtitle = element_text(size = 9))
+
+  ## --- Closest matches (top 10 outliers by RRD)---
+  copied_idx <- which(original_df$copied_outlier)
+  top_copied_idx <- copied_idx[order(original_df$RRD[copied_idx], decreasing = TRUE)][1:min(top_n_copies, length(copied_idx))]
+
+  if (length(copied_idx) > 0 && top_n_copies > 0) {
+    closest_matches <- map_dfr(top_copied_idx, function(obs_index) {
+      closest_index_orig <- original_df$orig_closest_row[obs_index]
+      closest_index_syn <- original_df$syn_closest_row[obs_index]
+
+      bind_rows(
+        data.frame(type = "Copied outlier (original data)", row_id = obs_index, row.names = NULL) %>%
+          bind_cols(original_df[obs_index, ]),
+        data.frame(type = "Closest match (synthetic data)", row_id = closest_index_syn, row.names = NULL) %>%
+          bind_cols(synthetic_df[closest_index_syn, ]),
+        data.frame(type = "Closest match (original data)", row_id = closest_index_orig, row.names = NULL) %>%
+          bind_cols(original_df[closest_index_orig, ])
+      ) %>% select(-gap_RRD_SRD, -orig_closest_row, -syn_closest_row)
+    })
+  } else {
+    closest_matches = data.frame()
+  }
+
+  # --- Interactive output ---
+  if (interactive() & interactive_output == TRUE) {
+    print(p1)
+    invisible(readline(prompt = "Press return for next plot:"))
+    print(p2)
+    invisible(readline(prompt = paste0("Press return for closest matches to the ", length(top_copied_idx), " worst copied outliers:")))
+    if (nrow(closest_matches) > 0) {
+      View(closest_matches)
+    } else {
+      message("There are no copied outliers.")
+    }
+  }
+
+
+  return(list(
+    histogram = p1,
+    scatterplot = p2,
+    closest_matches = closest_matches
+  ))
+}

@@ -1,12 +1,12 @@
 # =====================================================
 # Helper Function: get_dictionary ----
 # =====================================================
-#' @title datatype translation
-#' @description get a vector of language specific type names
+#' @title Data Type Translation
+#' @description Creates a vector of language specific data type names.
 #'
-#' @param lang either "en" for english or "nl" for Dutch
+#' @param lang Language in which the data types need to be saved. Either "en" for English or "nl" for Dutch.
 #' @keywords internal
-#' @return vector with translation of datatypes
+#' @return Vector with translation of data types.
 get_datatype_translation<-function(lang){
   switch(lang,
          "en"=dict_r_type_english,

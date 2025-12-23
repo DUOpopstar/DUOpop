@@ -8,7 +8,8 @@ run_utility_tests(
   syn_object,
   data_observed,
   utility_stat = "S_pMSE",
-  ngroups = 25
+  ngroups = 25,
+  print.flag = TRUE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ run_utility_tests(
 \item{utility_stat}{Parameter in the function compare.synds {synthpop}}
 
 \item{ngroups}{Parameter in the function utility.tables {synthpop}}
+
+\item{print.flag}{Parameter in the functions utility.tables and compare.synds {synthpop}}
 }
 \value{
 A list containing 1- and 2-dimensional utility results.
